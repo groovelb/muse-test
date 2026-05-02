@@ -21,4 +21,7 @@ export { HeroScatter } from './HeroScatter.jsx';
 export { HeroBridge } from './HeroBridge.jsx';
 export { BridgeMarquee } from './BridgeMarquee.jsx';
 export { Solution1Section } from './Solution1Section.jsx';
+export { TagMarqueeSection } from './TagMarqueeSection.jsx';
+export { Solution2Section } from './Solution2Section.jsx';
+export { FooterCtaSection } from './FooterCtaSection.jsx';
 export { AuthPage } from './AuthPage.jsx';

@@ -54,15 +54,20 @@ export function TypographyPreview({ tokens, onChange, defaultSample = 'Aa', refe
         return (
           <Box key={ token.id }>
             <TokenListItem
+              previewSx={ { width: 160, height: 56, justifyContent: 'flex-start' } }
               preview={
                 <Typography
                   sx={ {
                     fontFamily: token.fontFamily,
                     fontWeight: token.fontWeight,
-                    fontSize: 28,
-                    lineHeight: 1,
+                    fontSize: 32,
+                    lineHeight: 1.1,
                     letterSpacing: token.letterSpacing,
                     color: 'text.primary',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    maxWidth: '100%',
                   } }
                 >
                   { token.sampleText || defaultSample }

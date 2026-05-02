@@ -14,12 +14,13 @@ import Switch from '@mui/material/Switch';
  * - preview는 slot 패턴: 컬러 스와치, 타이포 샘플, 그라디언트 박스 등 임의 노드 주입
  *
  * Props:
- * @param {node} preview - 좌측 48x48 프리뷰 영역 (ReactNode) [Required]
+ * @param {node} preview - 좌측 프리뷰 영역 (ReactNode) [Required]
  * @param {string} label - 토큰 이름/역할 [Required]
  * @param {string} value - 토큰 값 (HEX, px, 폰트명 등 문자열 표현) [Optional]
  * @param {boolean} isEnabled - 토큰 활성화 상태 [Optional, 기본값: true]
  * @param {function} onToggleEnabled - 활성화 토글 (nextEnabled) => void [Optional]
  * @param {node} trailing - 우측 Switch 앞에 렌더할 보조 액션 (ReactNode) [Optional]
+ * @param {object} previewSx - 좌측 프리뷰 wrapper 스타일 (width/height 등 슬롯 사이즈 override) [Optional, 기본값: {width: 48, height: 48}]
  * @param {object} sx - 추가 스타일 [Optional]
  *
  * Example usage:
@@ -38,6 +39,7 @@ export function TokenListItem({
   isEnabled = true,
   onToggleEnabled,
   trailing,
+  previewSx,
   sx,
 }) {
   return (
@@ -56,7 +58,7 @@ export function TokenListItem({
         ...sx,
       } }
     >
-      {/* 1. Preview (48x48) */}
+      {/* 1. Preview (default 48x48, previewSx 로 override 가능) */}
       <Box
         sx={ {
           flex: '0 0 auto',
@@ -67,6 +69,7 @@ export function TokenListItem({
           justifyContent: 'center',
           opacity: isEnabled ? 1 : 0.4,
           transition: 'opacity 0.15s',
+          ...previewSx,
         } }
       >
         { preview }

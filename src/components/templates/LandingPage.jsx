@@ -6,22 +6,10 @@ import Stack from '@mui/material/Stack';
 import { PageContainer } from '../layout/PageContainer.jsx';
 import { HeroBridge } from './HeroBridge.jsx';
 import { Solution1Section } from './Solution1Section.jsx';
+import { TagMarqueeSection } from './TagMarqueeSection.jsx';
+import { Solution2Section } from './Solution2Section.jsx';
+import { FooterCtaSection } from './FooterCtaSection.jsx';
 import { AuthDialog } from '../overlay-feedback/AuthDialog.jsx';
-
-const FEATURES = [
-  {
-    title: '레퍼런스 아카이빙',
-    body: '드래그앤드롭 + URL 업로드. AI 가 색·타이포·레이아웃을 자동 태깅해 검색 가능한 자산으로 정리합니다.',
-  },
-  {
-    title: '의도 기반 큐레이션',
-    body: '5-step 위자드로 모드·의도·레퍼런스·노트를 모아, 결정의 맥락을 잃지 않고 합성합니다.',
-  },
-  {
-    title: '결정 추적 가능한 토큰',
-    body: '각 토큰의 출처 레퍼런스, 매칭 이유, 탈락 후보까지 동봉. 왜 그 색이 선택됐는지 다시 묻지 않습니다.',
-  },
-];
 
 /**
  * LandingPage 템플릿
@@ -95,94 +83,14 @@ export function LandingPage({
       {/* Solution #1: 5 layer 분류 + T1 자동 태깅 데모 */}
       <Solution1Section />
 
-      {/* Features */}
-      <Box
-        sx={ {
-          backgroundColor: 'grey.50',
-          borderTop: '1px solid',
-          borderColor: 'divider',
-        } }
-      >
-        <PageContainer variant="fluid">
-          <Box sx={ { py: { xs: 8, md: 12 } } }>
-            <Typography
-              variant="h4"
-              sx={ { fontWeight: 600, letterSpacing: '-0.02em', mb: 6, maxWidth: 720 } }
-            >
-              레퍼런스에서 토큰까지, 결정의 맥락이 사라지지 않습니다.
-            </Typography>
-            <Box
-              sx={ {
-                display: 'grid',
-                gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' },
-                gap: { xs: 4, md: 6 },
-              } }
-            >
-              { FEATURES.map((f, i) => (
-                <Box key={ f.title }>
-                  <Typography
-                    variant="overline"
-                    color="text.secondary"
-                    sx={ { letterSpacing: '0.16em' } }
-                  >
-                    0{ i + 1 }
-                  </Typography>
-                  <Typography
-                    variant="h6"
-                    sx={ { fontWeight: 600, mt: 1, mb: 1.5 } }
-                  >
-                    { f.title }
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={ { lineHeight: 1.7 } }>
-                    { f.body }
-                  </Typography>
-                </Box>
-              )) }
-            </Box>
-          </Box>
-        </PageContainer>
-      </Box>
+      {/* T1 어휘 3행 marquee (left ↔ right ↔ left) */}
+      <TagMarqueeSection />
 
-      {/* Footer CTA */}
-      <PageContainer variant="fluid">
-        <Box
-          sx={ {
-            py: { xs: 8, md: 14 },
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            textAlign: 'center',
-          } }
-        >
-          <Typography
-            variant="h3"
-            sx={ {
-              fontWeight: 600,
-              letterSpacing: '-0.02em',
-              mb: 3,
-              fontSize: { xs: 'clamp(28px, 6vw, 36px)', md: 'clamp(36px, 4vw, 56px)' },
-            } }
-          >
-            오늘 첫 레퍼런스를 올려보세요
-          </Typography>
-          <Typography
-            variant="body1"
-            color="text.secondary"
-            sx={ { mb: 4, maxWidth: 520 } }
-          >
-            가입 1 분, 첫 토큰 분석까지 5 분. 카드를 등록하지 않아도 됩니다.
-          </Typography>
-          <Button
-            onClick={ openSignup }
-            variant="contained"
-            color="primary"
-            size="large"
-            sx={ { px: 5 } }
-          >
-            무료로 시작하기
-          </Button>
-        </Box>
-      </PageContainer>
+      {/* Solution #2: T3 system 모드 분석 결과 (AnalysisLayerTabs) */}
+      <Solution2Section />
+
+      {/* Footer CTA — Hero 배경 응용 (레퍼런스 3행 marquee) */}
+      <FooterCtaSection onPrimaryCta={ openSignup } />
 
       {/* Footer */}
       <Box sx={ { borderTop: '1px solid', borderColor: 'divider' } }>
