@@ -15,19 +15,14 @@ import DownloadIcon from '@mui/icons-material/Download';
 import IconButton from '@mui/material/IconButton';
 import { PageContainer } from '../layout/PageContainer.jsx';
 import { SplitScreen } from '../layout/SplitScreen.jsx';
-import { CategoryTab } from '../in-page-navigation/CategoryTab.jsx';
-import { ColorSwatchList } from '../data-display/ColorSwatchList.jsx';
-import { TypographyPreview } from '../data-display/TypographyPreview.jsx';
-import { LayoutTokenPreview } from '../data-display/LayoutTokenPreview.jsx';
-import { GradientPreview } from '../data-display/GradientPreview.jsx';
 import { DesignMdPreview } from '../data-display/DesignMdPreview.jsx';
 import { ThemeExportDialog } from '../overlay-feedback/ThemeExportDialog.jsx';
+import { AnalysisLayerTabs } from './AnalysisLayerTabs.jsx';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableRow from '@mui/material/TableRow';
 import TableCell from '@mui/material/TableCell';
 import { RefImage } from '../media/RefImage.jsx';
-import { ANALYSIS_LAYERS_WITH_DESIGN_MD as LAYERS } from '../../data/muse/layers.js';
 
 /**
  * ProjectDetailPage 템플릿
@@ -59,7 +54,6 @@ export function ProjectDetailPage({
   onDelete,
   sx,
 }) {
-  const [activeLayer, setActiveLayer] = useState('color');
   const [isExportOpen, setExportOpen] = useState(false);
   const [isDeleteOpen, setDeleteOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -112,102 +106,6 @@ export function ProjectDetailPage({
   const usedReferences = (project?.referenceIds || [])
     .map((id) => references.find((r) => r.id === id))
     .filter(Boolean);
-
-  const handleChange = (layerKey) => (id, patch) => {
-    onUpdateToken?.(layerKey, id, patch);
-  };
-
-  const renderEditor = () => {
-    switch (activeLayer) {
-      case 'color':
-        return (
-          <ColorSwatchList
-            tokens={ analysis.color || [] }
-            onChange={ handleChange('color') }
-            references={ references }
-          />
-        );
-      case 'typography':
-        return (
-          <TypographyPreview
-            tokens={ analysis.typography || [] }
-            onChange={ handleChange('typography') }
-            references={ references }
-          />
-        );
-      case 'layout':
-        return (
-          <LayoutTokenPreview
-            tokens={ analysis.layout || [] }
-            onChange={ handleChange('layout') }
-            references={ references }
-          />
-        );
-      case 'gradient':
-        return (
-          <GradientPreview
-            tokens={ analysis.gradient || [] }
-            onChange={ handleChange('gradient') }
-            references={ references }
-          />
-        );
-      case 'designMd':
-        return (
-          <Box sx={ { bgcolor: 'background.paper', borderRadius: 3, p: { xs: 2, md: 4 }, border: '1px solid', borderColor: 'divider' } }>
-            <DesignMdPreview project={ project } layers={ analysis } variant="raw" />
-          </Box>
-        );
-      case 'visualDirection': {
-        const vd = analysis.visualDirection || { markdown: '', tags: { genre: [], style: [], subject: [] } };
-        return (
-          <Box sx={ { bgcolor: 'background.paper', borderRadius: 3, p: 4 } }>
-            {/* 태그 칩 */}
-            { vd.tags && (
-              <Box sx={ { display: 'flex', flexDirection: 'column', gap: 1, mb: 3 } }>
-                { Object.entries(vd.tags).map(([category, list]) => (
-                  list?.length > 0 && (
-                    <Box key={ category } sx={ { display: 'flex', alignItems: 'center', gap: 1 } }>
-                      <Typography variant="caption" color="text.secondary" sx={ { minWidth: 64, textTransform: 'uppercase', letterSpacing: '0.08em' } }>
-                        { category }
-                      </Typography>
-                      <Box sx={ { display: 'flex', gap: 0.75, flexWrap: 'wrap' } }>
-                        { list.map((t) => (
-                          <Box key={ t } sx={ { px: 1, py: 0.25, borderRadius: 999, border: '1px solid', borderColor: 'divider', fontSize: 12 } }>{ t }</Box>
-                        )) }
-                      </Box>
-                    </Box>
-                  )
-                )) }
-              </Box>
-            ) }
-            {/* Markdown 본문 — 단순 pre 렌더 (추후 react-markdown 도입 가능) */}
-            <Box
-              component="pre"
-              sx={ {
-                m: 0,
-                p: 2.5,
-                bgcolor: 'grey.50',
-                borderRadius: 2,
-                border: '1px solid',
-                borderColor: 'divider',
-                fontSize: 13,
-                lineHeight: 1.7,
-                fontFamily: 'inherit',
-                whiteSpace: 'pre-wrap',
-                wordBreak: 'break-word',
-                maxHeight: '60vh',
-                overflow: 'auto',
-              } }
-            >
-              { vd.markdown || '# Visual Direction\n\n(아직 생성되지 않았습니다)' }
-            </Box>
-          </Box>
-        );
-      }
-      default:
-        return null;
-    }
-  };
 
   const renderNotesPanel = () => {
     if (Object.keys(referenceNotes).length === 0) {
@@ -407,16 +305,12 @@ export function ProjectDetailPage({
             right={
               <Box sx={ { display: 'flex', flexDirection: 'column', gap: 6 } }>
                 {/* 분석 결과 */}
-                <Box>
-                  <CategoryTab
-                    categories={ LAYERS }
-                    selected={ activeLayer }
-                    onChange={ setActiveLayer }
-                  />
-                  <Box sx={ { py: 2 } }>
-                    { renderEditor() }
-                  </Box>
-                </Box>
+                <AnalysisLayerTabs
+                  project={ project }
+                  analysis={ analysis }
+                  references={ references }
+                  onUpdateToken={ onUpdateToken }
+                />
 
                 {/* 디자인 가이드 — showcase */}
                 { analysis && (

@@ -5,6 +5,7 @@ import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
 import { PageContainer } from '../layout/PageContainer.jsx';
 import { HeroBridge } from './HeroBridge.jsx';
+import { Solution1Section } from './Solution1Section.jsx';
 import { AuthDialog } from '../overlay-feedback/AuthDialog.jsx';
 
 const FEATURES = [
@@ -90,6 +91,9 @@ export function LandingPage({
         brandName={ brandName }
         onPrimaryCta={ openSignup }
       />
+
+      {/* Solution #1: 5 layer 분류 + T1 자동 태깅 데모 */}
+      <Solution1Section />
 
       {/* Features */}
       <Box

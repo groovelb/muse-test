@@ -112,8 +112,8 @@ export function BridgeMarquee({ rows, isPlaying, onImageEnter, onImageLeave }) {
                       'calc(var(--ox) * (1 - var(--p, 0)) + var(--mx, 0) * var(--strength) * (1 - var(--p, 0))),' +
                       'calc(var(--oy) * (1 - var(--p, 0)) + var(--my, 0) * var(--strength) * (1 - var(--p, 0)))' +
                       ') scale(calc(var(--baseScale) + (1 - var(--baseScale)) * var(--p, 0)))',
-                    /** depthOpacity 0.12~0.25 → marquee 0.85 보간 */
-                    opacity: 'calc(var(--baseOp) + (0.85 - var(--baseOp)) * var(--p, 0))',
+                    /** Hero 시점 1 → marquee 도착 시 0.85 로 보간 */
+                    opacity: 'calc(1 - 0.15 * var(--p, 0))',
                     transition:
                       'transform 220ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 320ms ease',
                     willChange: 'transform, opacity',

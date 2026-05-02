@@ -9,6 +9,7 @@ export { FilterPanel } from './FilterPanel.jsx';
 export { SortMenu } from './SortMenu.jsx';
 export { ReferencePicker } from './ReferencePicker.jsx';
 export { ProjectCreateWizard } from './ProjectCreateWizard.jsx';
+export { AnalysisLayerTabs } from './AnalysisLayerTabs.jsx';
 
 // Page-level templates (MUSE)
 export { ArchivePage } from './ArchivePage.jsx';
@@ -19,4 +20,5 @@ export { LandingPage } from './LandingPage.jsx';
 export { HeroScatter } from './HeroScatter.jsx';
 export { HeroBridge } from './HeroBridge.jsx';
 export { BridgeMarquee } from './BridgeMarquee.jsx';
+export { Solution1Section } from './Solution1Section.jsx';
 export { AuthPage } from './AuthPage.jsx';
