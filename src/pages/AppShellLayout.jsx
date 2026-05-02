@@ -1,11 +1,12 @@
 import { useEffect } from 'react';
-import { Outlet, useMatch } from 'react-router-dom';
+import { Outlet, useMatch, useNavigate } from 'react-router-dom';
 import Box from '@mui/material/Box';
 import { AppShell } from '../components/layout/AppShell.jsx';
 import { MuseNav } from './MuseNav.jsx';
 import { ArchiveRoute } from './ArchiveRoute.jsx';
 import { ProjectListRoute } from './ProjectListRoute.jsx';
-import { useReferencesSlice } from '../store';
+import { useReferencesSlice, useSettingsSlice } from '../store';
+import { useAuth } from '../hooks/auth/useAuth.js';
 import { preloadImages, evictUnused } from '../utils/imagePreloadCache.js';
 
 /**
@@ -21,6 +22,9 @@ import { preloadImages, evictUnused } from '../utils/imagePreloadCache.js';
  */
 export function AppShellLayout() {
   const { references } = useReferencesSlice();
+  const { settings, updateSettings } = useSettingsSlice();
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const urls = (references || []).map((r) => r.thumbnailUrl).filter(Boolean);
@@ -33,8 +37,26 @@ export function AppShellLayout() {
   // keep-alive 라우트 중 하나가 활성이면 Outlet 은 숨김 (이중 렌더 방지)
   const showOutlet = !isArchive && !isProjectList;
 
+  const headerUser = user
+    ? {
+      name: user.user_metadata?.name || null,
+      email: user.email || null,
+      avatarUrl: user.user_metadata?.avatar_url || null,
+    }
+    : null;
+
   return (
-    <AppShell logo={ <MuseNav /> }>
+    <AppShell
+      logo={ <MuseNav /> }
+      user={ headerUser }
+      onSettings={ () => navigate('/settings') }
+      onSignOut={ async () => {
+        await signOut();
+        navigate('/', { replace: true });
+      } }
+      themeMode={ settings?.themeMode || 'system' }
+      onThemeModeChange={ (next) => updateSettings({ themeMode: next }) }
+    >
       <Box sx={ { display: isArchive ? 'block' : 'none' } }>
         <ArchiveRoute />
       </Box>

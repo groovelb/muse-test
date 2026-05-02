@@ -40,6 +40,11 @@ const AppShell = forwardRef(function AppShell({
   headerCollapsible,
   drawerHeader,
   drawerFooter,
+  user,
+  onSettings,
+  onSignOut,
+  themeMode,
+  onThemeModeChange,
   children,
   breakpoint = 'md',
   headerHeight = 64,
@@ -69,6 +74,11 @@ const AppShell = forwardRef(function AppShell({
         persistent={headerPersistent}
         drawerHeader={drawerHeader}
         drawerFooter={drawerFooter}
+        user={user}
+        onSettings={onSettings}
+        onSignOut={onSignOut}
+        themeMode={themeMode}
+        onThemeModeChange={onThemeModeChange}
         breakpoint={breakpoint}
         height={headerHeight}
         drawerWidth={drawerWidth}
