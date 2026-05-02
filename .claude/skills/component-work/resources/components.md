@@ -1,0 +1,151 @@
+# Components
+
+Vibe Dictionary 텍소노미 v0.4 기반 분류. 번호는 텍소노미 카테고리 번호.
+
+## 참조 문서
+
+- 전체 텍소노미: `.claude/skills/component-work/resources/taxonomy-v0.4.md`
+- 빠른 인덱스: `.claude/skills/component-work/resources/taxonomy-index.md`
+
+새 컴포넌트 생성 시 위 문서에서 해당 카테고리 번호와 컴포넌트 원형을 확인한 후 구현할 것.
+
+---
+
+## 1. Typography — 텍스트 표현과 장식
+
+- FitText: 컨테이너에 맞춤 텍스트 (`components/typography/FitText.jsx`)
+- HighlightedTypography: 하이라이트 타이포그래피 (`components/typography/HighlightedTypography.jsx`)
+- InlineTypography: 인라인 타이포그래피 (`components/typography/InlineTypography.jsx`)
+- StretchedHeadline: 스트레치 헤드라인 (`components/typography/StretchedHeadline.jsx`)
+- StyledParagraph: 스타일드 문단 (`components/typography/StyledParagraph.jsx`)
+- Title: 타이틀 컴포넌트 (`components/typography/Title.jsx`)
+- QuotedContainer: 인용 컨테이너 (`components/typography/QuotedContainer.jsx`)
+
+## 2. Container — 시각적 경계와 그룹핑
+
+- SectionContainer: 페이지 섹션 컨테이너. `variant: 'fluid' | 'focus'` 로 폭 모드 분리 (focus 시 maxWidth=720 기본, focusMaxWidth 로 조정) (`components/container/SectionContainer.jsx`)
+- CarouselContainer: 캐로셀 컨테이너 (`components/container/CarouselContainer.jsx`)
+- RatioContainer: 비율 기반 컨테이너 (`components/container/RatioContainer.jsx`)
+
+## 3. Card — 독립적 정보 단위
+
+- CardContainer: 카드 기본 컨테이너. variant, padding, elevation (`components/card/CardContainer.jsx`)
+- CustomCard: 미디어+콘텐츠 카드. vertical/horizontal/overlay 레이아웃 (`components/card/CustomCard.jsx`)
+- ImageCard: 이미지 카드. 태그 배지, 선택 체크박스(`isSelectable`/`isSelected`/`onToggleSelect`), 기본 좋아요 액션, `mediaRatio` prop(default 'auto', 고정 aspect 시 grid jitter 방지) (`components/card/ImageCard.jsx`)
+- MoodboardCard: 무드보드 컬렉션 카드. 2x2 썸네일 그리드 (`components/card/MoodboardCard.jsx`)
+- ModeSelectCard: TP2 — 프로젝트 생성 첫 화면 모드 카드 (concept/system/handoff). 한 번의 선택이 T2 추천·T3 합성·Export 기본을 모두 분기 (`components/card/ModeSelectCard.jsx`)
+- ReferenceLayerChipRow: TP4 — 추천 카드별 "이 ref에서 어느 레이어를 가져올지" chip 토글. T2 referenceLayer 자동 / 사용자 수동 (`components/card/ReferenceLayerChipRow.jsx`)
+- ReferenceCard: MUSE Reference (공식 데이터 모델) 도메인 카드. ImageCard 위에 T1 분석 state(0|1|2) 머신 + analyzingVariant ('chip' 작은 뱃지 / 'strip' 하단 LayerAnalysisStrip) + errorMessage / onRetry 에러 chip 통합. ArchivePage / ReferencePicker / AdminRoute / 랜딩 데모 모두 이걸 사용 (`components/card/ReferenceCard.jsx`)
+- Card: MUI Card 컴포넌트 [MUI]
+
+## 4. Media — 이미지, 비디오 표시
+
+- AspectMedia: 비율 기반 미디어 컨테이너 (`components/media/AspectMedia.jsx`)
+- ImageCarousel: 이미지 캐로셀 (`components/media/ImageCarousel.jsx`)
+- ImageTransition: 이미지 트랜지션 효과 (`components/media/ImageTransition.jsx`)
+- CarouselIndicator: 캐로셀 인디케이터 (`components/media/CarouselIndicator.jsx`)
+
+## 5. Data Display — 구조화된 데이터 시각화
+
+- TokenListItem: 토큰 편집 공통 행. preview 48x48 슬롯 + label/value + emphasis(Low/Mid/High) + on/off Switch (`components/data-display/TokenListItem.jsx`)
+- ColorSwatchList: 컬러 레이어 토큰 목록. TokenListItem 반복, 선택적 group 헤더, TP6 결정 추적 펼침(❓ 아이콘 → TokenDecisionTracePanel) (`components/data-display/ColorSwatchList.jsx`)
+- TokenDecisionTracePanel: TP6 — 토큰 카드 펼침 시 출처 레퍼런스 썸네일 + 의도 매칭 이유 + 탈락 후보(alternativesConsidered) 표시 (`components/data-display/TokenDecisionTracePanel.jsx`)
+- TypographyPreview: 타이포 레이어 토큰 목록. preview에 실제 폰트로 샘플 문자 렌더 (`components/data-display/TypographyPreview.jsx`)
+- LayoutTokenPreview: 레이아웃 레이어(grid/spacing/container) mini-diagram 프리뷰 (`components/data-display/LayoutTokenPreview.jsx`)
+- GradientPreview: 그라디언트 레이어 토큰 목록. preview에 실제 gradient 스와치 (`components/data-display/GradientPreview.jsx`)
+- LayerAnalysisStrip: 레퍼런스 / 미디어 카드 하단에 부착되는 가벼운 5 layer 진행 strip. ANALYZING n/N + LinearProgress 2px + per-layer status 행. overlay 아닌 stack 흐름 (`components/data-display/LayerAnalysisStrip.jsx`)
+- Table: MUI Table 컴포넌트 [MUI]
+
+## 6. In-page Navigation — 페이지 내 탐색
+
+- CategoryTab: 카테고리 탭 (`components/in-page-navigation/CategoryTab.jsx`)
+- Tabs: MUI Tabs 컴포넌트 [MUI]
+
+## 7. Input & Control — 사용자 입력
+
+- FileDropzone: 파일 드래그&드롭 영역 (`components/input/FileDropzone.jsx`)
+- SearchBar: 검색 입력 바 (`components/input/SearchBar.jsx`)
+- TagInput: 태그 입력 필드 (`components/input/TagInput.jsx`)
+- IntentGuideField: TP3 (Step 1) — 한 줄 의도 textarea (placeholder + helperText 가이드만, maxLength 120). 가이드 박스는 Step 3 RefinementNotesField 로 옮겨감 (`components/input/IntentGuideField.jsx`)
+- RefinementNotesField: Step 3 — 레퍼런스 본 후 활용 노트 textarea + 가이드 박스 + 선택된 ref 썸네일. 모드별 minLength 차등 (concept=0, system=30, handoff=50). T3 합성 HIGHEST PRIORITY 입력 (`components/input/RefinementNotesField.jsx`)
+- LoginForm: 이메일+비밀번호 로그인 폼. useSignIn 호출 + 자체 검증 (8자 이상). loading/error 상태 + onSignedIn / onSwitchToSignUp 콜백 (`components/input/LoginForm.jsx`)
+- SignUpForm: 이메일+비밀번호+확인 가입 폼. useSignUp 호출 + 자체 검증 (8자 이상, 일치 검증). Confirm email OFF 합의로 가입 즉시 onSignedUp 호출 (`components/input/SignUpForm.jsx`)
+- Button: MUI Button 컴포넌트 [MUI]
+- Checkbox: MUI Checkbox 컴포넌트 [MUI]
+- Select: MUI Select 컴포넌트 [MUI]
+- Switch: MUI Switch 컴포넌트 [MUI]
+- TextField: MUI TextField 컴포넌트 [MUI]
+
+## 8. Layout — 공간 배치와 구조
+
+- PhiSplit: 황금비 분할 레이아웃 (`components/layout/PhiSplit.jsx`)
+- SplitScreen: 좌우 분할 레이아웃. ratio, stackAt, stackOrder 지원 (`components/layout/SplitScreen.jsx`)
+- BentoGrid: 벤토 그리드 레이아웃 (`components/layout/BentoGrid.jsx`)
+- LineGrid: 그리드 아이템 사이 1px 라인 자동 삽입 (`components/layout/LineGrid.jsx`)
+- FullPageContainer: 전체 페이지 컨테이너 (`components/layout/FullPageContainer.jsx`)
+- PageContainer: 반응형 페이지 컨테이너. `variant: 'fluid' | 'focus'` 로 폭 모드 분리 (fluid=뷰포트 전체+clamp padding / focus=중앙 좁은 maxWidth, 기본 720px). 미지정 시 기존 MUI maxWidth 동작 유지 (`components/layout/PageContainer.jsx`)
+- AppShell: 반응형 앱 셸. GNB + 메인 콘텐츠 영역 (`components/layout/AppShell.jsx`)
+- StickyAsideCenterLayout: 대칭 3열 그리드. sticky aside + 페이지 정중앙 콘텐츠 + 빈 대칭 칼럼 (`components/layout/StickyAsideCenterLayout.jsx`)
+- InfiniteMasonry: MUI Masonry 기반 인피니트 스크롤 그리드. IntersectionObserver sentinel + 로딩/빈/끝 상태 내장 (`components/layout/InfiniteMasonry.jsx`)
+- useInfiniteScroll: IntersectionObserver 기반 무한 스크롤 훅. `{ onLoadMore, hasMore, isEnabled, rootMargin }` (`components/layout/useInfiniteScroll.js`)
+- AuthGuard: 보호 라우트 wrapper. useAuth 로 user 확인, 미인증 시 redirectTo 로 navigate(state.from 보존), 로딩 중 CircularProgress (`components/layout/AuthGuard.jsx`)
+- Grid: MUI Grid 컴포넌트 [MUI]
+- Masonry: MUI Masonry 컴포넌트 [MUI]
+
+## 9. Overlay & Feedback — 맥락적 정보 표시
+
+- AnalysisProgress: 레이어별 단계 상태(pending/running/done/error) + 전체 진행률 집계. 취소/재시도 액션 (`components/overlay-feedback/AnalysisProgress.jsx`)
+- ThemeExportDialog: MUI `createTheme` 코드 export 다이얼로그. 클립보드 복사 + 파일 다운로드, 필수 토큰 누락 경고. `utils/serializeTheme.js`와 페어 (`components/overlay-feedback/ThemeExportDialog.jsx`)
+- ReferenceDetailDialog: 아카이브 카드 클릭 시 레퍼런스 상세(원본 이미지 + 레이어별 전체 태그 + 대표 색상 + 출처/수집일) 모달. 활성 필터 태그/색상은 강조 표시 (`components/overlay-feedback/ReferenceDetailDialog.jsx`)
+- Dialog: MUI Dialog 컴포넌트 [MUI]
+
+## 10. Navigation (Global) — 페이지 간 이동
+
+- GNB: 반응형 글로벌 네비게이션 바. 데스크탑 메뉴 / 모바일 Drawer (`components/navigation/GNB.jsx`)
+- NavMenu: 네비게이션 메뉴 (`components/navigation/NavMenu.jsx`)
+- SlidingHighlightMenu: 슬라이딩 하이라이트 메뉴. hover 시 layoutId 기반 인디케이터 이동, background/underline, horizontal/vertical (`components/navigation/SlidingHighlightMenu.jsx`)
+
+## 11. KineticTypography (Interactive) — 텍스트 애니메이션 효과
+
+- RandomRevealText: 랜덤 순서 blur 리빌 타이포그래피. Fisher-Yates 셔플 기반 (`components/kinetic-typography/RandomRevealText.jsx`)
+- ScrambleText: 텍스트 스크램블 전환 효과. requestAnimationFrame 기반 (`components/kinetic-typography/ScrambleText.jsx`)
+- ScrollRevealText: 스크롤 진행에 따른 텍스트 순차 리빌 (`components/kinetic-typography/ScrollRevealText.jsx`)
+
+## 13. ContentTransition (Interactive) — 섹션 간 전환
+
+- HorizontalScrollContainer: 세로 스크롤→가로 이동 변환 컨테이너. 픽셀 기반 DOM 측정, Framer Motion (`components/content-transition/HorizontalScrollContainer.jsx`)
+
+## 12. Scroll (Interactive) — 스크롤 기반 효과
+
+- VideoScrubbing: 스크롤 기반 비디오 스크러빙 (`components/scroll/VideoScrubbing.jsx`)
+- ScrollScaleContainer: 뷰포트 노출 비율 연동 스케일 컨테이너. Framer Motion useScroll + useTransform (`components/scroll/ScrollScaleContainer.jsx`)
+
+## 14. Motion (Interactive) — 스토리텔링 모션
+
+- FadeTransition: 기본 opacity 전환 애니메이션. 등장/퇴장 페이드 + 방향 슬라이드, IntersectionObserver 자동 트리거 (`components/motion/FadeTransition.jsx`)
+- PerspectiveTransition: 3D 원근 회전 전환. 뒤로 누워있다가 세워지는 효과, CSS perspective + rotateX, IntersectionObserver 자동 트리거 (`components/motion/PerspectiveTransition.jsx`)
+- MarqueeContainer: 무한 루프 수평 흐름 컨테이너. CSS keyframes 기반 (`components/motion/MarqueeContainer.jsx`)
+
+## 15. DynamicColor (Interactive) — 동적 색상 변화
+
+- GradientOverlay: Three.js WebGL 스크롤 반응형 그라데이션 배경. Simplex Noise + 필름 그레인 (`components/dynamic-color/GradientOverlay.jsx`)
+- GradientOverlayDynamic: Next.js 동적 import 래퍼 (ssr: false). 페이지에서 사용 시 이것을 import (`components/dynamic-color/GradientOverlayDynamic.jsx`)
+
+---
+
+## Common (유틸리티)
+
+- Indicator: 범용 인디케이터 (`common/ui/Indicator.jsx`)
+- Placeholder: 스토리 예제용 FPO 플레이스홀더 시스템. Box/Image/Media/Text/Line/Paragraph/Card 서브컴포넌트 (`common/ui/Placeholder.jsx`)
+- FilterBar: 필터 바. SearchBar + 태그 Chip + SortMenu + 뷰 모드 토글 조합 (`components/templates/FilterBar.jsx`)
+- FilterPanel: 레퍼런스 컬렉션용 다중 필터 패널 (검색 + 대표 색상 + 레이어별 태그 아코디언). controlled 방식 (`components/templates/FilterPanel.jsx`)
+- SortMenu: 정렬 옵션 드롭다운 버튼 (기본 4옵션: newest/oldest/name-asc/name-desc, options prop으로 재정의) (`components/templates/SortMenu.jsx`)
+- ReferencePicker: 추천 + 아카이브 탭 레퍼런스 다중 선택 패널. InfiniteMasonry + ImageCard(selectable) 조합, 태그 칩 필터 (`components/templates/ReferencePicker.jsx`)
+- ProjectCreateWizard: 3-스텝 프로젝트 생성 위자드 (기본정보 → 레퍼런스 선택 → 분석). useReducer 기반, `onAnalyze` 경계면 노출 (`components/templates/ProjectCreateWizard.jsx`)
+- ArchivePage: MUSE 아카이브 페이지 템플릿. AppShell + FileDropzone + FilterPanel + InfiniteMasonry 조립. 업로드/태깅/삭제 로직은 `useReferenceArchive` 훅으로 분리 (`components/templates/ArchivePage.jsx`)
+- useReferenceArchive: ArchivePage용 store-mode 업로드/T1 태깅/재시도/삭제 훅. store 미사용 시 외부 props로 폴백 (`components/templates/useReferenceArchive.js`)
+- ProjectDetailPage: MUSE 프로젝트 상세 페이지 템플릿. AppShell + CategoryTab(레이어) + SplitScreen(편집/프리뷰) + 레이어별 프리뷰 5종 + ThemeExportDialog 조립 (`components/templates/ProjectDetailPage.jsx`)
+- ProjectListPage: MUSE 프로젝트 목록 페이지. MoodboardCard를 Grid에 배치, 유형 Chip 오버레이, 빈 상태 CTA (`components/templates/ProjectListPage.jsx`)
+- SettingsPage: MUSE 설정 페이지. AI 모델(Select) / 자동 태깅(Switch) / 스토리지(Radio) / 테마 모드(Radio) 4섹션 (`components/templates/SettingsPage.jsx`)
+- LandingPage: 비로그인 사용자용 랜딩. GNB-lite + Hero + Features 3종 + Footer CTA. onPrimaryCta(가입), onSecondaryCta(로그인) 콜백 (`components/templates/LandingPage.jsx`)
+- AuthPage: 좌측 brand hero + 우측 폼 SplitScreen 템플릿. initialMode(signin/signup) 토글 내장. LoginForm/SignUpForm 의 onSwitchTo* 로 모드 전환. onAuthenticated 콜백 (`components/templates/AuthPage.jsx`)

@@ -1,0 +1,463 @@
+/**
+ * MUSE Export — Universal JSON + ZIP 번들 생성
+ *
+ * 출력 스키마는 MUI 특화가 아닌 "임의 프레임워크에서 소비 가능한 형태".
+ * 외부 AI 코딩 도구(Cursor/Claude Code 등)가 그대로 context로 받을 수 있게 설계.
+ *
+ * ZIP 구조:
+ *   muse-export-{slug}.zip
+ *   ├── muse.json                 ← universal tokens + metadata + vd 태그
+ *   ├── visual-direction.md       ← 독립 MD (muse.json.visualDirection.markdown과 동일)
+ *   ├── README.md                 ← AI 도구용 사용 가이드
+ *   └── references/
+ *       ├── ref-XXX.jpg
+ *       └── ...
+ */
+
+import JSZip from 'jszip';
+import {
+  buildDtcgTokens,
+  buildDesignMd,
+  buildDecisionTraceMd,
+  buildAiPasteBlock,
+  buildAttachmentTable,
+  inferImageExt,
+} from './tokenConverters';
+
+const MUSE_EXPORT_VERSION = '1.0';
+
+/* ============================================
+ * Helpers
+ * ============================================ */
+
+const slugify = (name) =>
+  (name || 'muse')
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-') || 'muse';
+
+const inferExt = (url, mime) => {
+  if (typeof url === 'string' && url.startsWith('data:')) {
+    const m = url.match(/^data:image\/([^;]+)/);
+    if (m) return `.${m[1] === 'jpeg' ? 'jpg' : m[1]}`;
+  }
+  if (mime) {
+    if (mime.includes('jpeg') || mime.includes('jpg')) return '.jpg';
+    if (mime.includes('png')) return '.png';
+    if (mime.includes('webp')) return '.webp';
+    if (mime.includes('gif')) return '.gif';
+    if (mime.includes('svg')) return '.svg';
+  }
+  const last = (typeof url === 'string' ? url : '').split('/').pop()?.split('?')[0] || '';
+  const em = last.match(/\.([a-zA-Z0-9]+)$/);
+  if (em) {
+    const ext = em[1].toLowerCase();
+    return ext === 'jpeg' ? '.jpg' : `.${ext}`;
+  }
+  return '.jpg';
+};
+
+/** 활성 토큰만 뽑아 export용 형태로 변환 (내부 _flag는 제외) */
+const pickEnabledTokens = (list) =>
+  (list || [])
+    .filter((t) => t.isEnabled !== false)
+    .map((t) => {
+      const { isEnabled: _e, _removed, _pending, _tagError, ...rest } = t;
+      return rest;
+    });
+
+/* ============================================
+ * Universal JSON builder
+ * ============================================ */
+
+/**
+ * 프로젝트 + 분석 + 참조된 references → 범용 JSON 스키마로 변환.
+ *
+ * 특징:
+ *  - MUI · Tailwind · 어떤 프레임워크에도 종속되지 않음
+ *  - color.hex, typography.fontSize (CSS value), layout.kind 등 값 그대로 명시
+ *  - visualDirection.markdown 이 서술형 디렉션 포함 (한글)
+ *  - references 는 파일 경로만 포함 (이미지 바이너리는 별도 ZIP 엔트리)
+ */
+export function buildUniversalJson({ project, analysis, references }) {
+  const projectRefs = (references || []).filter((r) =>
+    (project.referenceIds || []).includes(r.id),
+  );
+
+  const refFileMap = {};
+  projectRefs.forEach((r, i) => {
+    const prefix = String(i + 1).padStart(2, '0');
+    refFileMap[r.id] = `${prefix}-${r.id}${inferImageExt(r.thumbnailUrl)}`;
+  });
+
+  return {
+    meta: {
+      museVersion: MUSE_EXPORT_VERSION,
+      project: {
+        id: project.id,
+        name: project.name,
+        intent: project.intent,
+        mode: project.mode,
+        createdAt: project.createdAt,
+      },
+      generatedAt: new Date().toISOString(),
+      referenceCount: projectRefs.length,
+    },
+
+    color: {
+      description: '이미지 기반으로 추출한 컬러 토큰. HEX 값 그대로 사용 가능. role은 primary/secondary/accent/neutral.',
+      tokens: pickEnabledTokens(analysis?.color),
+    },
+
+    typography: {
+      description: '타이포그래피 토큰. fontFamily는 CSS font stack, fontSize는 clamp() 등 CSS 값 그대로.',
+      tokens: pickEnabledTokens(analysis?.typography),
+    },
+
+    layout: {
+      description: '레이아웃 토큰. kind는 grid(columns+gap) / container(ratio+maxWidth). spacing 은 별도 axis.',
+      tokens: pickEnabledTokens(analysis?.layout),
+    },
+
+    gradient: {
+      description: '그라디언트 토큰. gradient 필드에 CSS gradient 문자열 그대로 적용 가능.',
+      tokens: pickEnabledTokens(analysis?.gradient),
+    },
+
+    spacing: {
+      description: 'spacing scale 토큰 (xs/sm/md/lg/xl 형태의 object map). DESIGN.md spacing 과 1:1.',
+      scale: analysis?.spacing || {},
+    },
+
+    rounded: {
+      description: 'border radius scale 토큰 (object map). DESIGN.md rounded 와 1:1.',
+      scale: analysis?.rounded || {},
+    },
+
+    elevation: {
+      description: 'shadow 토큰 (optional). 빈 배열은 평면 디자인 의미. DESIGN.md x-elevation 과 1:1.',
+      tokens: pickEnabledTokens(Array.isArray(analysis?.elevation) ? analysis.elevation : []),
+    },
+
+    components: {
+      description: 'UI component 결합. 모든 값은 {a.b} token reference. DESIGN.md components 와 1:1.',
+      specs: analysis?.components || {},
+    },
+
+    visualDirection: {
+      description: '맥락 기반 비주얼 디렉션. 서술형 MD 문서 + 집계 태그.',
+      markdown: analysis?.visualDirection?.markdown || '',
+      tags: analysis?.visualDirection?.tags || { genre: [], style: [], subject: [] },
+    },
+
+    references: projectRefs.map((r) => ({
+      id: r.id,
+      filename: refFileMap[r.id],
+      title: r.title,
+      tags: r.tags,
+      dominantColors: r.dominantColors,
+      source: r.source,
+    })),
+  };
+}
+
+/* ============================================
+ * README 빌더 (AI 도구 가이드)
+ * ============================================ */
+
+function buildReadme(project, references) {
+  const name = project.name || 'Untitled';
+  const attachmentTable = buildAttachmentTable(project, references);
+  return `# MUSE Export — ${name}
+
+Generated by MUSE on ${new Date().toISOString().slice(0, 10)}.
+
+## Reference Images (외부 AI 에 첨부할 정확한 파일명)
+
+${attachmentTable}
+
+> 외부 AI 에 첨부할 때 위 파일명을 그대로 사용. 본문의 \`ref-XXX\` 언급은 위 파일과 1:1 매칭됩니다.
+
+## 파일 구성
+
+| 파일 | 용도 |
+|------|------|
+| \`muse.json\` | 범용 디자인 토큰 + 메타 + 비주얼 디렉션 태그 (기계 판독용) |
+| \`visual-direction.md\` | 서술형 디자인 디렉션 (사람/LLM 판독용) |
+| \`ai-paste-block.md\` | 외부 AI 도구 paste 용 (플랫폼 중립 prose + 첨부물 매칭) |
+| 각 reference 이미지 | 위 매칭 표 참조 |
+
+## AI 코딩 도구에 넣는 법
+
+### Cursor / Claude Code
+이 폴더를 프로젝트 루트 (예: \`design/muse/\`)에 복사한 뒤 프롬프트:
+
+> \`design/muse/muse.json\`의 토큰을 사용해 이 프로젝트를 구현하라.
+> 톤과 의도는 \`design/muse/visual-direction.md\`를 따른다.
+> 필요 시 위 매칭 표의 원본 이미지를 참고한다.
+
+### ChatGPT / Claude 대화
+\`ai-paste-block.md\` 본문을 paste + 매칭 표의 이미지 파일을 첨부 순번대로 업로드:
+
+> 이 토큰과 디렉션 문서를 기준으로 {프레임워크} 컴포넌트를 만들어줘.
+
+## muse.json 스키마 요약
+
+- \`meta\` — 프로젝트 메타 (name/intent/mode/createdAt)
+- \`color.tokens\` — \`[{ id, label, hex, role, group }]\`
+- \`typography.tokens\` — \`[{ id, label, variant, fontFamily, fontWeight, fontSize, lineHeight, letterSpacing }]\`
+- \`layout.tokens\` — \`[{ id, label, kind, columns|gap|px|ratio|maxWidth }]\`
+- \`gradient.tokens\` — \`[{ id, label, gradient }]\` (CSS string)
+- \`visualDirection\` — \`{ markdown, tags: { genre, style, subject } }\`
+- \`references\` — \`[{ id, filename, title, tags, dominantColors }]\`
+
+프레임워크 비종속: MUI/Tailwind/Chakra/Styled Components 어디서든 \`hex\` · CSS value를 그대로 쓰면 됨.
+
+---
+
+**의도**: ${project.intent || '(없음)'}
+**프로젝트 모드**: ${project.mode || 'system'}
+`;
+}
+
+/* ============================================
+ * ZIP builder + download
+ * ============================================ */
+
+/**
+ * concept 모드 전용 — 단일 .md 파일 다운로드 (ZIP 없음)
+ * @returns {Promise<{ filename: string, size: number }>}
+ */
+export async function exportConceptPrompt({ project, analysis, references }) {
+  const zip = new JSZip();
+  const promptText = analysis?.conceptPrompt || '';
+  const slug = slugify(project?.name);
+  const date = new Date().toISOString().slice(0, 10);
+  const pasteBlock = buildAiPasteBlock({ project, analysis, references });
+  const attachmentTable = buildAttachmentTable(project, references);
+
+  const md = `# ${project?.name || 'Concept'} — Concept Prompt
+
+_Generated by MUSE on ${date} (mode: concept)_
+
+## Reference Images (외부 AI 에 첨부할 정확한 파일명)
+
+${attachmentTable}
+
+> 외부 AI 도구에 paste 할 때 위 파일명을 그대로 첨부 순번대로 업로드.
+
+## 사용 방법
+
+아래 "AI Paste Block" 단락을 외부 AI 도구 (Claude Design / Gemini / AI Studio / ChatGPT 등) 에
+그대로 붙여넣고 위 매칭 표의 파일을 첨부 순번대로 함께 업로드하세요.
+
+## Prompt (raw)
+
+${promptText}
+
+---
+
+${pasteBlock}
+
+---
+
+**프로젝트 의도**: ${project?.intent || '(없음)'}
+`;
+  zip.file('concept-prompt.md', md);
+  zip.file('ai-paste-block.md', pasteBlock);
+
+  // 이미지 동봉 (첨부 순번 prefix, paste block 매칭 단서와 일치)
+  const projectRefs = (project?.referenceIds || [])
+    .map((id) => (references || []).find((r) => r.id === id))
+    .filter(Boolean);
+  await Promise.all(projectRefs.map(async (ref, i) => {
+    const prefix = String(i + 1).padStart(2, '0');
+    const filename = `${prefix}-${ref.id}${inferImageExt(ref.thumbnailUrl)}`;
+    try {
+      const res = await fetch(ref.thumbnailUrl);
+      if (!res.ok) throw new Error(`status ${res.status}`);
+      const blob = await res.blob();
+      zip.file(filename, blob);
+    } catch (e) {
+      zip.file(`${prefix}-${ref.id}.error.txt`, `Failed to include image: ${e?.message || String(e)}`);
+    }
+  }));
+
+  const zipBlob = await zip.generateAsync({ type: 'blob' });
+  const filename = `muse-${slug}-concept-${date}.zip`;
+  const url = URL.createObjectURL(zipBlob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  return { filename, size: zipBlob.size };
+}
+
+/**
+ * 프로젝트 하나를 ZIP으로 묶어 다운로드. (system 모드)
+ * concept 모드는 exportConceptPrompt 로 분기됨.
+ * @param {object} params
+ * @param {object} params.project - Project 엔티티
+ * @param {object} params.analysis - AnalysisLayers (layers 직접 접근 가능한 형태)
+ * @param {array}  params.references - 전체 store references (사용되는 것만 ZIP에 포함)
+ * @returns {Promise<{ filename: string, size: number }>}
+ */
+export async function exportProjectAsZip({ project, analysis, references }) {
+  // concept 모드: ZIP 대신 .md 단일 파일
+  if (project?.mode === 'concept') {
+    return exportConceptPrompt({ project, analysis });
+  }
+
+  const zip = new JSZip();
+  const universal = buildUniversalJson({ project, analysis, references });
+
+  // 1) muse.json (universal tokens)
+  zip.file('muse.json', JSON.stringify(universal, null, 2));
+
+  // 2) standalone visual-direction.md
+  const md = analysis?.visualDirection?.markdown;
+  if (md) {
+    zip.file('visual-direction.md', md);
+  }
+
+  // 3) README for AI tools
+  zip.file('README.md', buildReadme(project, references));
+
+  // 3.5) ai-paste-block.md — 외부 AI 도구 paste 용 (플랫폼 중립) (모든 mode 공통)
+  zip.file('ai-paste-block.md', buildAiPasteBlock({ project, analysis, references }));
+
+  // 4) references/ — 사용 이미지만 바이너리로 (첨부 순번 prefix: 01-ref-XXX)
+  const projectRefs = (project.referenceIds || [])
+    .map((id) => (references || []).find((r) => r.id === id))
+    .filter(Boolean);
+  const refsFolder = zip.folder('references');
+
+  await Promise.all(
+    projectRefs.map(async (ref, i) => {
+      const prefix = String(i + 1).padStart(2, '0');
+      const filename = `${prefix}-${ref.id}${inferImageExt(ref.thumbnailUrl)}`;
+      try {
+        const res = await fetch(ref.thumbnailUrl);
+        if (!res.ok) throw new Error(`status ${res.status}`);
+        const blob = await res.blob();
+        refsFolder.file(filename, blob);
+      } catch (e) {
+        refsFolder.file(
+          `${prefix}-${ref.id}.error.txt`,
+          `Failed to include image: ${e?.message || String(e)}`,
+        );
+      }
+    }),
+  );
+
+  // 5) Generate & download
+  const blob = await zip.generateAsync({ type: 'blob' });
+  const slug = slugify(project.name);
+  const date = new Date().toISOString().slice(0, 10);
+  const filename = `muse-${slug}-${date}.zip`;
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  return { filename, size: blob.size };
+}
+
+/**
+ * system 모드 전용 — DESIGN.md 중심의 가벼운 ZIP.
+ *
+ * ZIP 구조:
+ *   muse-system-{slug}-{date}.zip
+ *   ├── DESIGN.md            ← Google Labs alpha spec, front-matter + 8 prose section
+ *   ├── decision-trace.md    ← TP6 결정 추적 (whichReferences / whyChosen / appliedUserNotes)
+ *   ├── muse.json            ← universal tokens (호환용)
+ *   ├── tokens.dtcg.json     ← DTCG (선택 — 추가 도구 호환)
+ *   ├── visual-direction.md  ← VD markdown 단독
+ *   ├── README.md            ← 사용 가이드 + 매칭 표
+ *   └── references/
+ *       └── {ref-id}.{ext}
+ *
+ * @returns {Promise<{ filename: string, size: number }>}
+ */
+export async function exportSystemBundle({ project, analysis, references }) {
+  const zip = new JSZip();
+  const tokens = {
+    color: analysis?.color || [],
+    typography: analysis?.typography || [],
+    layout: analysis?.layout || [],
+    gradient: analysis?.gradient || [],
+    spacing: analysis?.spacing || {},
+    rounded: analysis?.rounded || {},
+    elevation: Array.isArray(analysis?.elevation) ? analysis.elevation : [],
+    components: analysis?.components || {},
+  };
+
+  zip.file('DESIGN.md', buildDesignMd({ project, layers: analysis }));
+  zip.file('decision-trace.md', buildDecisionTraceMd({ project, layers: analysis }));
+  zip.file('muse.json', JSON.stringify(buildUniversalJson({ project, analysis, references }), null, 2));
+  zip.file('tokens.dtcg.json', JSON.stringify(buildDtcgTokens(tokens), null, 2));
+  zip.file('visual-direction.md', analysis?.visualDirection?.markdown || '_(visual direction 없음)_');
+  zip.file('README.md', buildReadme(project, references));
+
+  const projectRefs = (project.referenceIds || [])
+    .map((id) => (references || []).find((r) => r.id === id))
+    .filter(Boolean);
+  const refsFolder = zip.folder('references');
+  await Promise.all(projectRefs.map(async (ref, i) => {
+    const prefix = String(i + 1).padStart(2, '0');
+    const filename = `${prefix}-${ref.id}${inferImageExt(ref.thumbnailUrl)}`;
+    try {
+      const res = await fetch(ref.thumbnailUrl);
+      if (!res.ok) throw new Error(`status ${res.status}`);
+      const blob = await res.blob();
+      refsFolder.file(filename, blob);
+    } catch (e) {
+      refsFolder.file(`${prefix}-${ref.id}.error.txt`, `Failed to include image: ${e?.message || String(e)}`);
+    }
+  }));
+
+  const blob = await zip.generateAsync({ type: 'blob' });
+  const slug = slugify(project.name);
+  const date = new Date().toISOString().slice(0, 10);
+  const filename = `muse-system-${slug}-${date}.zip`;
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  return { filename, size: blob.size };
+}
+
+/**
+ * muse.json만 다운로드 (이미지 제외 가벼운 경로).
+ */
+export function downloadUniversalJson({ project, analysis, references }) {
+  const universal = buildUniversalJson({ project, analysis, references });
+  const slug = slugify(project.name);
+  const blob = new Blob([JSON.stringify(universal, null, 2)], {
+    type: 'application/json;charset=utf-8',
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `muse-${slug}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
