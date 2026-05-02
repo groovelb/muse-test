@@ -1,0 +1,35 @@
+- generic [ref=e3]:
+  - generic [ref=e6]:
+    - generic [ref=e7]: MUUSE
+    - generic [ref=e8]:
+      - button "로그인" [ref=e9] [cursor=pointer]
+      - button "시작하기" [ref=e10] [cursor=pointer]
+  - generic [ref=e11]:
+    - generic:
+      - generic: MUUSE
+      - heading "바이브 디자인을 위한 영감을 관리하세요" [level=2]
+      - generic [ref=e12]:
+        - button "시작하기" [ref=e13] [cursor=pointer]
+        - button "로그인" [ref=e14] [cursor=pointer]
+  - generic [ref=e17]:
+    - heading "레퍼런스에서 토큰까지, 결정의 맥락이 사라지지 않습니다." [level=4] [ref=e18]
+    - generic [ref=e19]:
+      - generic [ref=e20]:
+        - generic [ref=e21]: "01"
+        - heading "레퍼런스 아카이빙" [level=6] [ref=e22]
+        - paragraph [ref=e23]: 드래그앤드롭 + URL 업로드. AI 가 색·타이포·레이아웃을 자동 태깅해 검색 가능한 자산으로 정리합니다.
+      - generic [ref=e24]:
+        - generic [ref=e25]: "02"
+        - heading "의도 기반 큐레이션" [level=6] [ref=e26]
+        - paragraph [ref=e27]: 5-step 위자드로 모드·의도·레퍼런스·노트를 모아, 결정의 맥락을 잃지 않고 합성합니다.
+      - generic [ref=e28]:
+        - generic [ref=e29]: "03"
+        - heading "결정 추적 가능한 토큰" [level=6] [ref=e30]
+        - paragraph [ref=e31]: 각 토큰의 출처 레퍼런스, 매칭 이유, 탈락 후보까지 동봉. 왜 그 색이 선택됐는지 다시 묻지 않습니다.
+  - generic [ref=e33]:
+    - heading "오늘 첫 레퍼런스를 올려보세요" [level=3] [ref=e34]
+    - paragraph [ref=e35]: 가입 1 분, 첫 토큰 분석까지 5 분. 카드를 등록하지 않아도 됩니다.
+    - button "무료로 시작하기" [ref=e36] [cursor=pointer]
+  - generic [ref=e39]:
+    - generic [ref=e40]: © 2026 MUUSE
+    - generic [ref=e41]: Made for designers and engineers

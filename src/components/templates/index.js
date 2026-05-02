@@ -16,4 +16,7 @@ export { ProjectListPage } from './ProjectListPage.jsx';
 export { ProjectDetailPage } from './ProjectDetailPage.jsx';
 export { SettingsPage } from './SettingsPage.jsx';
 export { LandingPage } from './LandingPage.jsx';
+export { HeroScatter } from './HeroScatter.jsx';
+export { HeroBridge } from './HeroBridge.jsx';
+export { BridgeMarquee } from './BridgeMarquee.jsx';
 export { AuthPage } from './AuthPage.jsx';

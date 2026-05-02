@@ -16,3 +16,6 @@ export { ReferenceDetailDialog } from './ReferenceDetailDialog.jsx';
 // ReferenceNotesDialog - 프로젝트 상세에서 ref별 자유 텍스트 노트 일괄 편집
 export { ReferenceNotesDialog } from './ReferenceNotesDialog.jsx';
 
+// AuthDialog - 회원가입/로그인 탭 전환 모달 (랜딩 CTA 진입)
+export { AuthDialog } from './AuthDialog.jsx';
+
