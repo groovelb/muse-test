@@ -11,7 +11,9 @@
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "generate-rules": "node scripts/generate-rules.js",
-    "gen:example-tokens": "node scripts/gen-example-tokens.mjs"
+    "gen:example-tokens": "node scripts/gen-example-tokens.mjs",
+    "functions:serve": "supabase functions serve --env-file supabase/functions/.env.local",
+    "functions:deploy": "supabase functions deploy"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

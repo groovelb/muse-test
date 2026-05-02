@@ -19,6 +19,8 @@ CLAUDE.local.md
 .env
 .env.*
 !.env.example
+supabase/functions/.env.local
+supabase/.temp/
 
 # Editor directories and files
 .vscode/*

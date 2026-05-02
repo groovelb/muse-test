@@ -1,70 +1,68 @@
 /**
- * MUSE AI 클라이언트 헬퍼 (start-point 버전)
+ * MUSE AI 클라이언트 헬퍼 (Phase 6 Stage B 버전)
  *
- * 백엔드 프록시 없이 Anthropic API 를 브라우저에서 직접 호출한다.
- * `VITE_ANTHROPIC_API_KEY` 가 .env.local 에 있어야 한다.
+ * Anthropic 호출을 Supabase Edge Function (`anthropic-proxy`) 로 우회.
+ * 키는 서버 secret (ANTHROPIC_API_KEY) 으로만 보관. 브라우저 번들에 노출되지 않음.
  *
- * ⚠️ 보안 주의: 직접 호출은 학습/실습 전용. 운영 단계에서는 반드시 서버 사이드 프록시
- *   (예: Supabase Edge Function, 별도 백엔드) 로 키를 숨길 것.
- *   Anthropic SDK 는 `dangerouslyAllowBrowser` 옵션이 필요하므로 여기서는 fetch 직호출 사용.
+ * 프록시 응답 포맷: { ok: true, data } | { ok: false, error: { code, message, status? } }
+ *
+ * 호출 시 supabase-js 가 현재 사용자 JWT 를 Authorization 헤더에 자동 첨부.
+ * Edge Function 이 JWT 를 검증하므로 비로그인 호출은 401.
  */
 
-const ANTHROPIC_API_URL = 'https://api.anthropic.com/v1/messages';
-const ANTHROPIC_VERSION = '2023-06-01';
+import { supabase } from '../lib/supabase.js';
 
-function getApiKey() {
-  const key = import.meta.env.VITE_ANTHROPIC_API_KEY;
-  if (!key) {
-    throw new Error('VITE_ANTHROPIC_API_KEY 가 설정되지 않았습니다. .env.local 에 추가해주세요.');
-  }
-  return key;
-}
+const FUNCTION_NAME = 'anthropic-proxy';
 
-/** 헬스 체크 — env 키 존재 여부만 확인 */
+/** 헬스 체크 — Supabase 클라이언트 존재 여부만 확인 (실제 호출 X) */
 export async function checkAnthropicHealth() {
-  const key = import.meta.env.VITE_ANTHROPIC_API_KEY;
   return {
-    ok: Boolean(key),
-    hasKey: Boolean(key),
-    endpoint: ANTHROPIC_API_URL,
+    ok: true,
+    hasKey: true, // 서버 보유. 클라이언트에서는 확인 불가
+    endpoint: `supabase.functions.invoke('${FUNCTION_NAME}')`,
   };
 }
 
 /**
- * Anthropic messages.create 호출 (브라우저 직접).
+ * Anthropic messages.create 호출 (Edge Function 경유).
  *
  * @param {object} params
  * @param {string} params.model - 예: 'claude-haiku-4-5-20251001'
  * @param {string} [params.system] - 시스템 프롬프트
  * @param {Array}  params.messages - [{ role: 'user'|'assistant', content: ... }]
- * @param {Array}  [params.tools]  - Tool 정의 배열
- * @param {object} [params.tool_choice] - { type: 'tool', name: '...' } 등
+ * @param {Array}  [params.tools]
+ * @param {object} [params.tool_choice]
  * @param {number} [params.max_tokens]
  * @param {number} [params.temperature]
- * @returns {Promise<object>} Anthropic API 응답 원본
+ * @returns {Promise<object>} Anthropic API 응답 원본 (proxy 응답의 .data)
  */
 export async function callAnthropic(params) {
-  const apiKey = getApiKey();
-  const res = await fetch(ANTHROPIC_API_URL, {
-    method: 'POST',
-    headers: {
-      'x-api-key': apiKey,
-      'anthropic-version': ANTHROPIC_VERSION,
-      'anthropic-dangerous-direct-browser-access': 'true',
-      'content-type': 'application/json',
-    },
-    body: JSON.stringify(params),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
+  const { data: invokeData, error: invokeErr } = await supabase.functions.invoke(
+    FUNCTION_NAME,
+    { body: params },
+  );
+
+  if (invokeErr) {
+    // Edge Runtime / 네트워크 / FunctionsHttpError
     const err = new Error(
-      `Anthropic error ${res.status}: ${data?.error?.message || data?.error || data?.message || 'unknown'}`,
+      `Edge function error: ${invokeErr.message || 'unknown'}`,
     );
-    err.status = res.status;
-    err.detail = data;
+    err.status = invokeErr.status || invokeErr.context?.status || null;
+    err.detail = invokeErr;
     throw err;
   }
-  return data;
+
+  if (!invokeData || invokeData.ok !== true) {
+    const code = invokeData?.error?.code || 'unknown';
+    const message = invokeData?.error?.message || 'Edge function returned non-ok';
+    const status = invokeData?.error?.status || null;
+    const err = new Error(`Anthropic proxy error [${code}]: ${message}`);
+    err.status = status;
+    err.detail = invokeData?.error || invokeData;
+    throw err;
+  }
+
+  return invokeData.data;
 }
 
 /**
